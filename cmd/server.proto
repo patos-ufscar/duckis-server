@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/patos-ufscar/duckis-server";
+
+// Models
+message Creds {
+  string                        user = 1;
+  string                        passwd = 2;
+}
+
+// Request
+message AddUserRequest {
+  Creds                         creds = 1;
+  Creds                         new_user = 2;
+}
+
+// Responses
+message AddUserResponse {
+  int32                          return_code = 1;
+}
+
+// Services
+service Management {
+  rpc AddUser(AddUserRequest) returns (AddUserResponse);
+  rpc DeleteUser() returns ();
+}
+
+service Store {
+  rpc Get() returns ();
+  rpc Search() returns ();
+  rpc Set() returns ();
+  rpc SetEx() returns ();
+  rpc Unset() returns ();
+  rpc Clear(google.protobuf.Empty) returns ();
+}
