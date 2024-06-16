@@ -36,8 +36,9 @@ func (s *StoreServiceImpl) SetEx(key string, val interface{}, ttl time.Duration)
 
 func (s *StoreServiceImpl) Get(key string) (*interface{}, error) {
 	s.mu.RLock()
+	defer s.mu.RUnlock()
+	
 	storeItem, ok := s.cache[key]
-	s.mu.RUnlock()
 
 	if !ok {
 		return nil, ErrKeyNotPresent
@@ -56,12 +57,7 @@ func (s *StoreServiceImpl) Get(key string) (*interface{}, error) {
 	return &val, nil
 }
 
-func (s *StoreServiceImpl) Search(pattern string) (*[]interface{}, error) {
-	reg, err := regexp.Compile(pattern)
-	if err != nil {
-		return nil, err
-	}
-
+func (s *StoreServiceImpl) Search(reg *regexp.Regexp) *[]interface{} {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -82,5 +78,5 @@ func (s *StoreServiceImpl) Search(pattern string) (*[]interface{}, error) {
 		vals = append(vals, val)
 	}
 
-	return &vals, nil
+	return &vals
 }
