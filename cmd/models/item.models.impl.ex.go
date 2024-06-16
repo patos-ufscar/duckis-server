@@ -3,8 +3,6 @@ package models
 import (
 	"time"
 	"unsafe"
-
-	"github.com/patos-ufscar/duckis-server/utils"
 )
 
 type StoreItemExImpl struct {
@@ -22,7 +20,7 @@ func NewStoreItemExImpl(value interface{}, ttl time.Duration) StoreItem {
 func (s *StoreItemExImpl) Get() (interface{}, error) {
 
 	if s.ex.Before(time.Now()) {
-		return nil, utils.ErrValueTimedOut
+		return nil, ErrValueTimedOut
 	}
 
 	return s.value, nil

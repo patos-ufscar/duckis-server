@@ -1,11 +1,11 @@
 package services
 
 import (
+	"regexp"
 	"sync"
 	"time"
 
 	"github.com/patos-ufscar/duckis-server/models"
-	"github.com/patos-ufscar/duckis-server/utils"
 )
 
 type StoreServiceImpl struct {
@@ -22,14 +22,16 @@ func NewStoreServiceImpl() StoreService {
 
 func (s *StoreServiceImpl) Set(key string, val interface{}) {
 	s.mu.Lock()
+	defer s.mu.Unlock()
+	
 	s.cache[key] = models.NewStoreItemStdImpl(val)
-	s.mu.Unlock()
 }
 
 func (s *StoreServiceImpl) SetEx(key string, val interface{}, ttl time.Duration) {
 	s.mu.Lock()
+	defer s.mu.Unlock()
+	
 	s.cache[key] = models.NewStoreItemExImpl(val, ttl)
-	s.mu.Unlock()
 }
 
 func (s *StoreServiceImpl) Get(key string) (*interface{}, error) {
@@ -38,17 +40,47 @@ func (s *StoreServiceImpl) Get(key string) (*interface{}, error) {
 	s.mu.RUnlock()
 
 	if !ok {
-		return nil, utils.ErrKeyNotPresent
+		return nil, ErrKeyNotPresent
 	}
 
 	val, err := storeItem.Get()
 	if err != nil {
-		if err == utils.ErrValueTimedOut {
+		if err == models.ErrValueTimedOut {
 			delete(s.cache, key)
+			return nil, ErrKeyNotPresent
 		}
 
 		return nil, err
 	}
 
 	return &val, nil
+}
+
+func (s *StoreServiceImpl) Search(pattern string) (*[]interface{}, error) {
+	reg, err := regexp.Compile(pattern)
+	if err != nil {
+		return nil, err
+	}
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	vals := []interface{}{}
+	for k, v := range s.cache {
+		if !reg.MatchString(k) {
+			continue
+		}
+
+		val, err := v.Get()
+		if err != nil {
+			if err == models.ErrValueTimedOut {
+				delete(s.cache, k)
+			}
+			continue
+		}
+
+		vals = append(vals, val)
+	}
+
+	return &vals, nil
 }
