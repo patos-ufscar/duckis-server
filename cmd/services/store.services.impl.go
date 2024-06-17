@@ -57,6 +57,13 @@ func (s *StoreServiceImpl) Get(key string) (*interface{}, error) {
 	return &val, nil
 }
 
+func (s *StoreServiceImpl) Delete(key string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	delete(s.cache, key)
+}
+
 func (s *StoreServiceImpl) Search(reg *regexp.Regexp) *[]interface{} {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

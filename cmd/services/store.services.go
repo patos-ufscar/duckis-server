@@ -14,6 +14,9 @@ type StoreService interface {
 
 	// Get gets the value previously set in the key :: O(1)
 	Get(key string)											(*interface{}, error)
+
+	// Delete deletes the key:value pair
+	Delete(key string)
 	
 	// Search searches the complete db for any value that matches the regEx pattern :: O(n)
 	Search(reg *regexp.Regexp)								*[]interface{}
